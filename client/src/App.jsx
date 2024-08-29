@@ -15,7 +15,7 @@ const Layout = ({ children }) => {
   return (
     <div>
       <h1>Storybook</h1>
-      <img src={fairyImage}></img>
+      <img src={fairyImage} className='fairy-img'></img>
       <div>
         {children}
       </div>

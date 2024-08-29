@@ -1,18 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 const CreateRecipe = (props) => {
+    const pexelsApiKey = import.meta.env.VITE_API_KEY
+    const [searchSubmitted, setSearchSubmitted] = useState(false)
+    const [imageSearchTerm, setImageSearchTerm] = useState("")
+    const [imageChoices, setImageChoices] = useState([])
+    const [imageUrl, setImageUrl] = useState("")
     const [title, setTitle] = useState("");
     const [author, setAuthor] = useState("");
     const [synopsis, setSynopsis] = useState("");
     const [storyText, setStoryText] = useState("");
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState({});    
     const navigate = useNavigate();
+
+    useEffect(() => {
+        console.log("Api key:", pexelsApiKey);
+    }, []);
+
+    const handleChangeSearch = e => {
+        setImageSearchTerm(e.target.value)
+    }
+
+    const handleSubmitSearch = e =>{
+        e.preventDefault()
+        axios.get(`https://api.pexels.com/v1/search?query=${imageSearchTerm}&per_page=4`, {
+            headers: {
+                Authorization: pexelsApiKey
+              }
+        })
+        .then( res => {
+            // console.log(res.data.photos[0])
+            // console.log(res.data)
+            // for (let i = 0; i < 4; i++) {
+                // setImageChoices(prev => [...prev, res.data.photos[i]])
+                
+            // }
+            setImageChoices(res.data.photos)
+                console.log(imageChoices)
+            // setImage(res.data.photos[0])
+            setSearchSubmitted(true)
+        } )
+        .catch( error => {
+            console.log(error)
+        } )
+    }
+
+    const selectImage = (url) => {
+        console.log(`image url is ${url}`)
+        setImageUrl(url)
+    }
+
+    useEffect(() => {
+        console.log('Updated imageUrl:', imageUrl);
+    }, [imageUrl])
 
     const submitHandler = (e) => {
         e.preventDefault();
+
+        console.log(`Selected image url: ${imageUrl}`)
 
         // Frontend validations
         let validationErrors = {};
@@ -30,14 +78,18 @@ const CreateRecipe = (props) => {
             title,
             author,
             synopsis,
-            storyText
+            storyText,
+            imageUrl
 
         };
+
+        console.log("new story is", newStory)
 
         axios.post("http://localhost:9999/api/createStory", newStory)
             .then((res) => {
                 console.log(res);
                 navigate('/');
+                setImageChoices([])
             })
             .catch((err) => {
                 console.log(err);
@@ -45,11 +97,41 @@ const CreateRecipe = (props) => {
     }
 
     return (
-        <div>
-            
+        <div className='flex-container'>
             <button onClick={() => navigate('/')}>Back to Home</button>
             <h2>Add the next whimsical tale!</h2>
-            <form onSubmit={submitHandler}>
+
+            <div>
+                <h3 className='search-header'>First, search for an image to add to your story (optional):</h3>
+                <form onSubmit={handleSubmitSearch}>
+                    <label htmlFor="imageSearch">Search for an image</label>
+                    <input type="text" name="imageSearch" onChange={handleChangeSearch}/>
+                    <input type="submit" value="Search" />
+                </form>
+
+            {
+                imageChoices && imageChoices.length > 0 ? (
+                    <div className='image-choices-container'>
+                        {imageChoices.map((image, index) => (
+        
+                            <div className='flex-container-img'>
+                                <img key={index} src={image.src.medium} alt={image.alt} className="pexelsImage"/>
+                                <button onClick={() => selectImage(image.src.medium)} className='image-btn'>Choose this image</button>
+                            </div>
+                            
+           
+                        ))}
+                    </div>
+                ) : searchSubmitted ? (
+                    <p>No images found. Try a different search term.</p>
+                ) : 
+                null
+                
+            }
+            </div>
+
+            <form onSubmit={submitHandler} className='blockform'>
+                {imageUrl ? (<p>Image selected!</p>) : null}
                 <div className='form-fields'>
                     <label>Story Title: </label>
                     <input 

@@ -13,6 +13,7 @@ const DisplayOneStory = () => {
         axios.get(`http://localhost:9999/api/findOneStory/${id}`)
             .then((res) => {
                 setOneRecipe(res.data);
+                // console.log(res.data)
             })
             .catch((err) => {
                 console.log('Error fetching recipe details:', err);
@@ -41,9 +42,10 @@ const DisplayOneStory = () => {
             <div>
                 <button onClick={() => navigate('/')}>Back to Home</button>
             </div>
-            <div className='displayOne-page'>
+            <div className='displayOne-page flex-container'>
                 <h2 className='displayOne-header'>{oneStory.title}</h2>
-                <h4>{oneStory.author}</h4>
+                <img src={oneStory.imageUrl} className='pexels-image-display-one' />
+                <h4>By: {oneStory.author}</h4>
                 <p>{oneStory.storyText}</p>
                 <button onClick={deleteRecipe}>Delete</button>
             </div>
